@@ -1,0 +1,79 @@
+---
+title: "wordle"
+author: "Jyhreh Johnson"
+date: "2/10/2022"
+output: html_document
+---
+
+Step 1
+```{r}
+load_dictionary <- function(filename){
+        x <- read.delim(filename)
+        return(x$words)
+}
+```
+
+```{r}
+valid_list <- load_dictionary("collins-scrabble-words-2019.txt")
+
+solution_list <-load_dictionary("google-10000-english-usa-no-swears.txt")
+```
+
+Step 2
+```{r}
+solution_list <- intersect(valid_list, solution_list)
+```
+How many words are in your updated solution_list vector?
+-There are 8,336 word entries.
+
+Step 3
+```{r}
+library(stringr)
+pick_solution <- function(solution_list,word_length = 5){
+        s_length <- as.data.frame(solution_list)
+        names(s_length) <- c("word")
+        s_length <- dplyr::filter(s_length,nchar(word)==word_length)
+        word <- dplyr:: sample_n(s_length, size = 1)
+        word <- word$word %>%
+        strsplit(word, split = "")
+        print(word)
+}
+      
+solution <- pick_solution(solution_list, word_length=5)
+```
+
+Step 4
+```{r}
+play_wordle <- function(solution, valid_list, num_guesses = 6){
+      instructions <- "Hello! Welcome to R-Wordle. In this game, you will have 6 chances to guess the hidden 5 letter word. Good luck!"
+      print(instructions)
+      print("Letters left:")
+      LETTERS
+      guess <- readline("Please input your word guess, then press return/enter to submit your guess: ")
+      toupper(guess)
+      
+        evaluate_guess <- function(guess, solution){
+          i <- as.character(guess)
+          output <- case_when(
+            i == solution ~ "*",
+            i %in% solution ~ "+",
+            i != solution ~ "-"
+          )
+          output
+        }
+      setdiff(solution, evaluate_guess, LETTERS)
+        
+}
+    play_wordle(solution, valid_list, num_guess = 6,evaluate_guess(guess, 
+                solution))
+        
+        print("Congratulations! You won the Wordle!")
+        print(guess)# & feedback history
+       
+        print("Oh no! :/ Your guess is incorrect, please input another guess.")
+        play_wordle
+        
+        print("Oh no! It looks like your guess was incorrect. Sorry you have run
+        out of chances to guess.")
+        print(guess)# & feedback history
+```
