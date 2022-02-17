@@ -64,8 +64,7 @@ play_wordle <- function(solution, valid_list, num_guesses = 6){
       setdiff(solution, evaluate_guess, LETTERS)
         
 }
-    play_wordle(solution, valid_list, num_guess = 6,evaluate_guess(guess, 
-                solution))
+    play_wordle(solution, valid_list, num_guess = 6,evaluate_guess(guess, solution))
         
         print("Congratulations! You won the Wordle!")
         print(guess)# & feedback history
