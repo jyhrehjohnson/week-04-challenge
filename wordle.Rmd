@@ -28,51 +28,76 @@ How many words are in your updated solution_list vector?
 
 Step 3
 ```{r}
-library(stringr)
-pick_solution <- function(solution_list,word_length = 5){
+pick_solution <- function(solution_list, word_length = 5){
         s_length <- as.data.frame(solution_list)
         names(s_length) <- c("word")
-        s_length <- dplyr::filter(s_length,nchar(word)==word_length)
+        s_length <- dplyr::filter(s_length,nchar(word) == word_length)
         word <- dplyr:: sample_n(s_length, size = 1)
         word <- word$word %>%
-        strsplit(word, split = "")
-        print(word)
+          strsplit(word, split = "")
+        word <- word[[1]]
+        return(word)
 }
       
-solution <- pick_solution(solution_list, word_length=5)
+solution <- pick_solution(solution_list, word_length = 5)
 ```
 
 Step 4
 ```{r}
-play_wordle <- function(solution, valid_list, num_guesses = 6){
-      instructions <- "Hello! Welcome to R-Wordle. In this game, you will have 6 chances to guess the hidden 5 letter word. Good luck!"
-      print(instructions)
-      print("Letters left:")
-      LETTERS
-      guess <- readline("Please input your word guess, then press return/enter to submit your guess: ")
-      toupper(guess)
-      
-        evaluate_guess <- function(guess, solution){
-          i <- as.character(guess)
-          output <- case_when(
-            i == solution ~ "*",
-            i %in% solution ~ "+",
-            i != solution ~ "-"
+evaluate_guess <- function(guess, solution){
+        library(sjmisc)
+        word_length <- length(solution)
+        text_feedback <- rep("-", word_length)
+        for( i in 1: word_length){
+          text_feedback [i] <- case_when(
+            guess[i] == solution[i] ~ "*",
+            guess[i] %in% solution & guess[i] != solution[i] ~ "+",
+            guess[i] %nin% solution ~ "-"
           )
-          output
-        }
-      setdiff(solution, evaluate_guess, LETTERS)
-        
+    }
+    return(text_feedback)
 }
-    play_wordle(solution, valid_list, num_guess = 6,evaluate_guess(guess, solution))
+          
+play_wordle <- function(solution, valid_list,num_guesses = 6){
+      library(tidyverse)
+      library(sjmisc)
+      word_length <- length(solution)
+      print("Hello! Welcome to R-Wordle. In this game, you will have 6 chances to guess the hidden 5 letter word. Good luck!")
+      print("Available Letters:")
+      letters_left <- LETTERS
+      print(letters_left)
+      
+      guess_history <- data.frame(matrix(nrow = word_length, ncol= num_guesses))
+      feedback_history <- data.frame(matrix(nrow = word_length, ncol= num_guesses))
+      
+      for(i in 1:num_guesses){
+        guess <- readline("Please input your word guess, then press return/enter to submit your guess: ")%>%
+          toupper()
+        while(nchar(guess) > word_length | toupper(guess) %nin% valid_list){
+          print("Oh no! :/ Your guess is incorrect, please input another guess.")
+            guess <- readline("Please input another guess: ")%>%
+              toupper()
+          }
+        guess <- strsplit(guess, split = "")[[1]]
+        print(guess) 
+        guess_history[,i] <- guess
+        feedback <- evaluate_guess(guess,solution)
+        feedback_history[,i] <- feedback
+        print("Available Letters:")
+        letters_left <- setdiff(letters_left, guess)
+        print(letters_left)
+        print(feedback)
         
-        print("Congratulations! You won the Wordle!")
-        print(guess)# & feedback history
-       
-        print("Oh no! :/ Your guess is incorrect, please input another guess.")
-        play_wordle
-        
-        print("Oh no! It looks like your guess was incorrect. Sorry you have run
-        out of chances to guess.")
-        print(guess)# & feedback history
+        if(setequal(feedback, rep("*", word_length))){
+          print("Congratulations! You won the Wordle!")
+          print(guess_history)
+          return(feedback_history)
+        }
+      }
+      
+      print("Sorry! :/ Your guesses were incorrect, you have run out of chances.")
+      print(feedback_history)
+      print(guess_history)
+}
+       play_wordle(solution, valid_list, num_guesses = 6)
 ```
